@@ -1,0 +1,7 @@
+.env
+houdini.log
+output/*
+localenv/*
+hdaFiles/*
+
+.idea
