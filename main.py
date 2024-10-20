@@ -6,81 +6,13 @@ import websocket #NOTE: websocket-client (https://github.com/websocket-client/we
 import uuid
 import sys
 import os
-# 通っているpathをすべて表示
 
-# sys.path.append(r"C:\Program Files\Side Effects Software\Houdini 20.5.388\bin\LibHAPIL.dll")
-# sys.path.append(r"C:\Program Files\Side Effects Software\Houdini 20.5.388\bin\LibHAPI.dll")
-# sys.path.append(r"C:\Program Files\Side Effects Software\Houdini 20.5.388\custom\houdini\dsolib\libHAPIL.lib")
-# sys.path.append(r"C:\Program Files\Side Effects Software\Houdini 20.5.388\custom\houdini\dsolib\libHAPI.lib")
-# sys.path.append(r"C:\Program Files\Side Effects Software\Houdini 20.5.388\toolkit\include\HAPI")
 
-# windowsで設定してもなぜか通らないのでpythonから設定\
-houdini_bin_path = r"C:\Program Files\Side Effects Software\Houdini 20.5.388\bin"
-os.add_dll_directory(houdini_bin_path)
-
-# 環境変数を読み込む
 load_dotenv()
-houdini_bin_path = os.getenv("HOUDINI_BIN_PATH")
-houdini_python_lib_path = os.getenv("HOUDINI_PYTHON_LIB_PATH")
-
-server_address = os.getenv("CONFY_UI_SERVER_ADDRESS")
 host = os.getenv("HOST")
 port = int(os.getenv("PORT"))
-sys.path.append(houdini_python_lib_path)
-
-import hapi
-import hou
-
-
-# server_address = "http://172.17.92.170:50001/"
 client_id = str(uuid.uuid4())
-
-# HARSを起動
-hars_host = os.getenv("HARS_HOST")
-hars_port = int(os.getenv("HARS_PORT"))
-log_path = "houdini.log"
-options = hapi.ThriftServerOptions()
-process_id = hapi.startThriftSocketServer(options, hars_port, log_path)
-
-print(f"Thrift server started with process ID: {process_id}")
-
-# セッション情報を作成
-session_info = hapi.SessionInfo()
-session = hapi.createThriftSocketSession(hars_host, hars_port, session_info)
-cook_options = hapi.CookOptions()
-
-# すでにセッションが初期化されている場合はcontinue
-try:
-    hapi.isInitialized(session)
-    print("Session already initialized.")
-except hapi.NotInitializedError:
-    hapi.initialize(session, cook_options)
-    print("Session initialized.")
-
-
-try:
-    print("In-Process session created successfully!")
-    node_id = hapi.createNode(session, -1, 'Sop/curve')
-    node_id2 = hapi.createNode(session, -1, 'Sop/grid')
-    # その新しいノードのhapi.NodeInfoを取得します。
-
-
-    node_info = hapi.getNodeInfo(session, node_id)
-    # 文字列を取得するために2つの手順を踏みます。
-    str_len = hapi.getStringBufLength(session, node_info.nameSH)
-    node_name = hapi.getString(session, node_info.nameSH, str_len)
-    print(f"Created node: {node_name}")
-
-
-    # fileを保存
-    hapi.saveHIPFile(session, "output" + "\\" + "{}.hip".format(node_name), True)
-    hapi.cleanup(session)
-    hapi.closeSession(session)
-except hapi.FailureError as e:
-    print(f"FailureError: {e}")
-except Exception as e:
-    print(f"An error occurred: {e}")
-
+server_address = os.getenv("CONFY_UI_SERVER_ADDRESS")
 
 class CustomHandler(BaseHTTPRequestHandler):
 
