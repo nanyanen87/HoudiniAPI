@@ -26,8 +26,7 @@ cd your_repository
 Windowsの場合:
 
 ```bash
-python -m venv venv
-venv\Scripts\activate
+localenv\Scripts\activate
 ```
 
 Linux/macOSの場合:
@@ -44,7 +43,8 @@ pip install -r requirements.txt
 
 ### 4. 環境変数の設定
 
-`.env`ファイルをリポジトリのルートにコピーして、必要なパラメータを設定します。例:
+gitに上げたくないものは`.env`ファイルに記述してください。
+それ以外は`config.py`に記述してください。
 
 ```plaintext
 API_KEY=your_api_key
@@ -54,9 +54,11 @@ OTHER_PARAM=your_other_param
 ### 5. サーバーの起動
 
 `main.py`を実行してAPIサーバーを起動します。
+`/start_hars`にアクセスするとHARSが起動します。
 
 ```bash
 python main.py
+curl http://localhost:3000/start_hars
 ```
 
 ## APIの使用方法
