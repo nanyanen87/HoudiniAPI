@@ -1,5 +1,5 @@
 .env
-houdini.log
+logs/*
 output/*
 localenv/*
 hdaFiles/*

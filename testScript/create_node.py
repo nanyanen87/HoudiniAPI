@@ -4,7 +4,7 @@ import sys
 import os
 
 # windowsで設定してもなぜか通らないのでpythonから設定\
-houdini_bin_path = r"C:\Program Files\Side Effects Software\Houdini 20.5.388\bin"
+houdini_bin_path = r"C:\Program Files\Side Effects Software\Houdini 20.5.390\bin"
 os.add_dll_directory(houdini_bin_path)
 
 # 環境変数を読み込む

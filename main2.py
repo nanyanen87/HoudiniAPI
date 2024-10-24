@@ -21,10 +21,12 @@ app = Flask(__name__)
 from controllers.start_hars_controller import start_hars
 from controllers.stop_hars_controller import stop_hars
 from controllers.execute_controller import execute
+from controllers.execute_hda_controller import execute_hda
 
 app.add_url_rule('/start_hars', view_func=start_hars, methods=['GET'])
 app.add_url_rule('/stop_hars', view_func=stop_hars, methods=['GET'])
 app.add_url_rule('/execute', view_func=execute, methods=['GET'])
+app.add_url_rule('/execute_hda', view_func=execute_hda, methods=['GET'])
 
 @app.route('/')
 def index():
@@ -100,23 +102,3 @@ def index():
 print("server started")
 if __name__ == '__main__':
     app.run(host=APP_HOST, port=APP_PORT, debug=True)
-
-
-
-
-# 接続確立用と作業用のsessionを分ける
-def init_hars_session():
-    # server通信確立sessionと作業用のsessionはわける？
-    sys.path.append(HOUDINI_PYTHON_LIB_PATH)
-    session_info = hapi.SessionInfo()
-    session = hapi.createThriftSocketSession(HARS_HOST, HARS_PORT, session_info)
-    cook_options = hapi.CookOptions()
-
-    try:
-        hapi.isInitialized(session)
-        print("Session already initialized.")
-    except hapi.NotInitializedError:
-        hapi.initialize(session, cook_options)
-        print("Session initialized.")
-    return session
-

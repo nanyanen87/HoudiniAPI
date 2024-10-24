@@ -14,7 +14,9 @@ def start_hars():
         options = hapi.ThriftServerOptions()
         options.autoClose = False
         options.timeoutMs = 10000
-        log_path = "houdini-" + today.strftime("%Y%m%d") + ".log"
+        log_path = "logs/houdini-" + today.strftime("%Y%m%d") + ".log"
+        # logファイル作成
+        open(log_path, "w").close()
         process_id = hapi.startThriftSocketServer(options, HARS_PORT, log_path)
     except hapi.FailureError as e:
         print(f"FailureError: {e}")

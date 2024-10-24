@@ -13,7 +13,7 @@ def check_process(process_id: int):
 
 def kill_process(pid: int):
     try:
-        os.kill(pid, signal.SIGKILL)  # SIGKILLシグナルでプロセスを強制終了
+        os.kill(pid, signal.SIGTERM)
         print(f"Process {pid} killed.")
     except OSError as e:
         print(f"Failed to kill process {pid}: {e}")
