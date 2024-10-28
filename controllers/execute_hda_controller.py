@@ -3,7 +3,6 @@ from flask import jsonify
 import sys
 import hapi
 from config import HARS_PORT, HARS_HOST, HOUDINI_PYTHON_LIB_PATH
-from testScript.create_node import node_name
 
 hda_path = r"C:\\Users\\hanaoka nan\\AppDevelop\\houdiniScript\\hdaFiles\\top_hanaoka_nan.apirequest.1.0.hdanc"
 from utils.hapi_utils import get_library_name, get_asset_names, get_node_name, get_library_ids, init_hars_session, close_session

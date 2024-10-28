@@ -43,9 +43,13 @@ def check_port(port):
 def main():
     # PORTが使用されているか確認
     if check_port(APP_PORT):
+        # netstatでHARSのポートを使用しているプロセスを確認、それを止める
+        #netstat -ano | findstr :9090
+        #TCP         0.0.0.0:9090           0.0.0.0:0              LISTENING       3064
+        #TCP         [::]:9090              [::]:0                 LISTENING       3064
         print(f"Port {APP_PORT} is already in use. タスクマネージャーからHARSを終了してください。")
         return
-    app.run(host=APP_HOST, port=APP_PORT)
+    app.run(host=APP_HOST, port=APP_PORT, debug=True)
 
 if __name__ == "__main__":
     main()
