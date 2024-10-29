@@ -2,10 +2,13 @@ import datetime
 from flask import jsonify
 import sys
 import hapi
-from config import HARS_PORT, HARS_HOST, HOUDINI_PYTHON_LIB_PATH
+from utils.hapi_utils import convert_asset_name_to_operator_name
 
-hda_path = r"C:\\Users\\hanaoka nan\\AppDevelop\\houdiniScript\\hdaFiles\\top_hanaoka_nan.apirequest.1.0.hdanc"
-from utils.hapi_utils import get_library_name, get_asset_names, get_node_name, get_library_ids, init_hars_session, close_session
+# hda_path = r"C:\\Users\\hanaoka nan\\AppDevelop\\houdiniScript\\hdaFiles\\top_hanaoka_nan.apirequest.1.0.hdanc"
+hda_path = r"C:\\Users\\hanaoka nan\\AppDevelop\\houdiniScript\\hdaFiles\\sop_Natsumaru.chair.1.0.hdalc"
+from utils.hapi_utils import get_library_name, get_asset_names, get_node_name, get_library_ids, init_hars_session, \
+    close_session, convert_asset_name_to_operator_name
+
 
 # 接続確立用と作業用のsessionを分ける?
 def execute_hda():
@@ -30,24 +33,41 @@ def execute_hda():
                 my_asset_name = asset_name
                 break
 
+        #　目的のnodeを置く parent_nodeを作成
+        parent_node_id = hapi.createNode(session, -1, "Object/geo")
+        # parent_node_id = hapi.createNode(session, -1, "Top/topnet")
 
-        # nodeを作成
-        # my_asset_name = "hanaoka_nan::Top/apirequest::1.0"　だがoperator_nameには" hanaoka_nan::apirequest::1.0"が入る
-        parent_node_id = hapi.createNode(session, -1, "Top/topnet")
-        print(f"Parent node id: {parent_node_id}")
-        node_id = hapi.createNode(session, parent_node_id, 'hanaoka_nan::apirequest::1.0')
-        # node_id = hapi.createNode(session=session, parent_node_id=parent_node_id, operator_name=my_asset_name, node_label="apirequest", cook_on_creation=False)
-
-        # print(f"node id: {node_id}")
-        # print(f"node id type: {type(node_id)}")
-        # node_info = hapi.getNodeInfo(session=session, node_id=node_id)
-        # print(f"node info: {node_info}")
-        # str_len = hapi.getStringBufLength(session, node_info.nameSH)
-        # node_name = hapi.getString(session, node_info.nameSH, str_len)
+        # node作成
+        # natsumaru node作成　Natsumaru::Sop/chair::1.0
+        my_asset_name = get_asset_names(session, lib_id)[0]
+        # asset_nameをoperator_nameに変換　Natsumaru::chair::1.0
+        operator_name = convert_asset_name_to_operator_name(my_asset_name)
+        node_id = hapi.createNode(session, parent_node_id, operator_name)
         node_name = get_node_name(session, node_id)
         print(f"Created node: {node_name}")
-        now = datetime.datetime.now()
 
+        # paramを取得
+        node_info = hapi.getNodeInfo(session, node_id)
+        node_info_param_count = node_info.parmCount
+        param_info = hapi.getParameters(session, node_id, 0, node_info_param_count)
+        print(f"Node info param: {param_info}")
+        # [
+        # <hapi.ParmInfo: id=0, type=parmType.Float>,
+        # <hapi.ParmInfo: id=1, type=parmType.Float>,
+        # <hapi.ParmInfo: id=2, type=parmType.Float>,
+        # <hapi.ParmInfo: id=3, type=parmType.Float>,
+        # <hapi.ParmInfo: id=4, type=parmType.Float>,
+        # <hapi.ParmInfo: id=5, type=parmType.Float>,
+        # <hapi.ParmInfo: id=6, type=parmType.Float>
+        # ]
+
+        # paramを設定
+
+
+
+
+        # 保存
+        now = datetime.datetime.now()
         output_path = "output"
         # file名を日付+ノード名にする
         file_name = f"{now.strftime('%Y%m%d-%H%M%S')}_{node_name}.hip"

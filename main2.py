@@ -2,6 +2,8 @@
 # 将来的にはこのファイルをmain.pyにして、endpointで起動、停止、実行を行う
 # endpointは/start_hars, /stop_hars, /executeの３つ
 # sessionをcloseせずにサーバーを終了させると、PORTが開放されないので、次回サーバーを立てるときにエラーが出る
+import subprocess
+
 from flask import Flask, jsonify
 import os
 import socket
@@ -35,21 +37,20 @@ def index():
     # hello worldを返す
     return "Hello, World!"
 
-# portが使用されているか確認
-def check_port(port):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('localhost', port)) == 0
+# portが使用されていればTrueを返す
+def is_port_in_use(port):
+    result = subprocess.run(['netstat', '-an'], capture_output=True, text=True)
+    return f":{port}" in result.stdout
 
 def main():
     # PORTが使用されているか確認
-    if check_port(APP_PORT):
-        # netstatでHARSのポートを使用しているプロセスを確認、それを止める
-        #netstat -ano | findstr :9090
-        #TCP         0.0.0.0:9090           0.0.0.0:0              LISTENING       3064
-        #TCP         [::]:9090              [::]:0                 LISTENING       3064
-        print(f"Port {APP_PORT} is already in use. タスクマネージャーからHARSを終了してください。")
+    # debugモードならcheckしない。
+    is_debug = True
+    if not is_debug and is_port_in_use(HARS_PORT):
+        print(f"Port {HARS_PORT} is already in use")
         return
-    app.run(host=APP_HOST, port=APP_PORT, debug=True)
+
+    app.run(host=APP_HOST, port=APP_PORT, debug=is_debug)
 
 if __name__ == "__main__":
     main()

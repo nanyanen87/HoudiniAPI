@@ -19,7 +19,6 @@ sys.path.append(houdini_python_lib_path)
 
 import hapi
 
-
 # # HARSを起動
 hars_host = os.getenv("HARS_HOST")
 hars_port = int(os.getenv("HARS_PORT"))

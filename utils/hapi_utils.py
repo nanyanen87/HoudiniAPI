@@ -71,3 +71,11 @@ def close_session(session):
     hapi.shutdown(session)
     hapi.closeSession(session)
     print(f"Session closed: {session}")
+
+def convert_asset_name_to_operator_name(asset_name):
+    array = asset_name.split("::")
+    author = array[0]
+    base_name = array[1].split("/")[1]
+    version = array[2]
+
+    return f"{author}::{base_name}::{version}"
