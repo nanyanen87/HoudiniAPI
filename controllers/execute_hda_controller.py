@@ -1,11 +1,14 @@
 import datetime
-from flask import jsonify
+from flask import jsonify,request
 import sys
 import hapi
+
+from testScript.create_node import cook_options
 from utils.hapi_utils import convert_asset_name_to_operator_name, get_param_name, set_multi_param
 
 # hda_path = r"C:\\Users\\hanaoka nan\\AppDevelop\\houdiniScript\\hdaFiles\\top_hanaoka_nan.apirequest.1.0.hdanc"
-hda_path = r"C:\\Users\\hanaoka nan\\AppDevelop\\houdiniScript\\hdaFiles\\sop_Natsumaru.chair.1.0.hdalc"
+# hda_path = r"C:\\Users\\hanaoka nan\\AppDevelop\\houdiniScript\\hdaFiles\\sop_Natsumaru.chair.1.0.hdalc"
+hda_path = r"C:\Users\hanaoka nan\AppDevelop\houdiniScript\hdaFiles\object_tsuno.sample_pig_image.1.0.hdalc"
 from utils.hapi_utils import get_library_name, get_asset_names, get_node_name, get_library_ids, init_hars_session, \
     close_session, convert_asset_name_to_operator_name
 
@@ -42,9 +45,12 @@ def execute_hda():
         my_asset_name = get_asset_names(session, lib_id)[0]
         # asset_nameをoperator_nameに変換　Natsumaru::chair::1.0
         operator_name = convert_asset_name_to_operator_name(my_asset_name)
-        node_id = hapi.createNode(session, parent_node_id, operator_name)
+        print(f"Operator name: {operator_name}")
+        node_id = hapi.createNode(session, -1, "tsuno::Object/sample_pig_image::1.0")
         node_name = get_node_name(session, node_id)
         print(f"Created node: {node_name}")
+        cook_options = hapi.CookOptions()
+        hapi.cookNode(session, node_id, cook_options)
 
         # paramを取得
         node_info = hapi.getNodeInfo(session, node_id)
@@ -55,14 +61,8 @@ def execute_hda():
             print(param_name)
 
         # paramを一気に設定
-        # seat_height
-        # back_height
-        # width
-        # depth
-        # frame_size
-        # cushion_depth
-        # cushion_bevel
-        set_multi_param(session, node_id, [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5])
+
+        # set_multi_param(session, node_id, [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5])
 
 
         # 保存

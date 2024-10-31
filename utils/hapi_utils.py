@@ -1,10 +1,25 @@
+import datetime
+
 import hapi
 from flask import jsonify
 from config import HARS_PORT, HARS_HOST, HOUDINI_PYTHON_LIB_PATH
 
 
 # C言語っぽい作りになっているので、pythonっぽく使いやすいように関数を作成
-
+# def start_hars():
+#     today = datetime.date.today()
+#     options = hapi.ThriftServerOptions()
+#     options.timeoutMs = 10000
+#     log_path = "logs/houdini-" + today.strftime("%Y%m%d") + ".log"
+#     try:
+#         # logファイル作成
+#         open(log_path, "w").close()
+#         process_id = hapi.startThriftSocketServer(options, HARS_PORT, log_path)
+#     except hapi.FailureError as e:
+#         print(f"FailureError: {e}")
+#         return jsonify({"error": f"FailureError: {e}"}), 500
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
 """
 # library_idからlibrary_nameを取得する
 """
