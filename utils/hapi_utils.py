@@ -30,9 +30,66 @@ def get_asset_names(session, library_id):
 """
 def get_node_name(session, node_id):
     node_info = hapi.getNodeInfo(session, node_id)
-    str_len = hapi.getStringBufLength(session, node_info.nameSH)
-    node_name = hapi.getString(session, node_info.nameSH, str_len)
-    return node_name
+    return __get_name_from_sh(session, node_info.nameSH)
+
+def get_param_name(session, node_id, parm_id):
+    parm_info = hapi.getParmInfo(session, node_id, parm_id)
+    return __get_name_from_sh(session, parm_info.nameSH)
+
+def set_single_param(session, node_id, param_name, value):
+    param_id = hapi.getParmIdFromName(session, node_id, param_name)
+    if param_id == -1:
+        print(f"Parameter {param_name} not found.")
+        return
+
+    # string, int, floatで処理を分ける
+    if isinstance(value, str):
+        return hapi.setParmStringValue(session, node_id, param_name, 0, value)
+    elif isinstance(value, int):
+        return hapi.setParmIntValue(session, node_id, param_name, 0, value)
+    elif isinstance(value, float):
+        return hapi.setParmFloatValue(session, node_id, param_name, 0, value)
+    else:
+        print(f"Invalid value type: {type(value)}")
+        return  False
+
+"""
+同じtypeの複数のパラメータを一気に設定する
+"""
+def set_multi_param(session, node_id, values):
+    node_info = hapi.getNodeInfo(session, node_id)
+    # string, int, floatで処理を分ける
+    if isinstance(values[0], str):
+        count = node_info.parmStringValueCount
+        # countとvaluesの長さが違う場合はエラーを返す
+        if count != len(values):
+            print(f"Invalid value count: {len(values)}")
+            return False
+
+        return hapi.setParmStringValues(session, node_id, values, 0, count)
+    elif isinstance(values[0], int):
+        count = node_info.parmIntValueCount
+        if count != len(values):
+            print(f"Invalid value count: {len(values)}")
+            return False
+
+        return hapi.setParmIntValues(session, node_id, values, 0, count)
+    elif isinstance(values[0], float):
+        count = node_info.parmFloatValueCount
+        if count != len(values):
+            print(f"Invalid value count: {len(values)}")
+            return False
+
+        return hapi.setParmFloatValues(session, node_id, values, 0, count)
+    else:
+        print(f"Invalid value type: {type(values[0])}")
+        return  False
+
+
+def __get_name_from_sh(session, sh):
+    str_len = hapi.getStringBufLength(session, sh)
+    name = hapi.getString(session, sh, str_len)
+    return name
 
 def get_library_ids(session):
     library_count = hapi.getLoadedAssetLibraryCount(session)

@@ -2,7 +2,7 @@ import datetime
 from flask import jsonify
 import sys
 import hapi
-from utils.hapi_utils import convert_asset_name_to_operator_name
+from utils.hapi_utils import convert_asset_name_to_operator_name, get_param_name, set_multi_param
 
 # hda_path = r"C:\\Users\\hanaoka nan\\AppDevelop\\houdiniScript\\hdaFiles\\top_hanaoka_nan.apirequest.1.0.hdanc"
 hda_path = r"C:\\Users\\hanaoka nan\\AppDevelop\\houdiniScript\\hdaFiles\\sop_Natsumaru.chair.1.0.hdalc"
@@ -49,21 +49,20 @@ def execute_hda():
         # paramを取得
         node_info = hapi.getNodeInfo(session, node_id)
         node_info_param_count = node_info.parmCount
-        param_info = hapi.getParameters(session, node_id, 0, node_info_param_count)
-        print(f"Node info param: {param_info}")
-        # [
-        # <hapi.ParmInfo: id=0, type=parmType.Float>,
-        # <hapi.ParmInfo: id=1, type=parmType.Float>,
-        # <hapi.ParmInfo: id=2, type=parmType.Float>,
-        # <hapi.ParmInfo: id=3, type=parmType.Float>,
-        # <hapi.ParmInfo: id=4, type=parmType.Float>,
-        # <hapi.ParmInfo: id=5, type=parmType.Float>,
-        # <hapi.ParmInfo: id=6, type=parmType.Float>
-        # ]
+        param_info_list = hapi.getParameters(session, node_id, 0, node_info_param_count)
+        for i in range(node_info_param_count):
+            param_name = get_param_name(session, node_id, param_info_list[i].id)
+            print(param_name)
 
-        # paramを設定
-
-
+        # paramを一気に設定
+        # seat_height
+        # back_height
+        # width
+        # depth
+        # frame_size
+        # cushion_depth
+        # cushion_bevel
+        set_multi_param(session, node_id, [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5])
 
 
         # 保存
