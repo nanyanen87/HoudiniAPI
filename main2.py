@@ -8,8 +8,9 @@ from flask import Flask, jsonify
 import os
 import socket
 import sys
+import pkgutil
+import importlib
 from dotenv import load_dotenv
-
 
 load_dotenv()
 HOUDINI_BIN_PATH = os.getenv("HOUDINI_BIN_PATH")
@@ -22,15 +23,8 @@ sys.path.append(HOUDINI_PYTHON_LIB_PATH)
 os.add_dll_directory(HOUDINI_BIN_PATH)
 
 app = Flask(__name__)
-from controllers.start_hars_controller import start_hars
-from controllers.stop_hars_controller import stop_hars
-from controllers.execute_controller import execute
-from controllers.execute_hda_controller import execute_hda
 
-app.add_url_rule('/start_hars', view_func=start_hars, methods=['GET'])
-app.add_url_rule('/stop_hars', view_func=stop_hars, methods=['GET'])
-app.add_url_rule('/execute', view_func=execute, methods=['GET'])
-app.add_url_rule('/execute_hda', view_func=execute_hda, methods=['GET'])
+from controllers import register_controllers
 
 @app.route('/')
 def index():
@@ -43,6 +37,9 @@ def is_port_in_use(port):
     return f":{port}" in result.stdout
 
 def main():
+    # controllerの初期化
+    register_controllers(app)
+
     # PORTが使用されているか確認
     # debugモードならcheckしない。
     is_debug = True
@@ -51,6 +48,7 @@ def main():
         return
 
     app.run(host=APP_HOST, port=APP_PORT, debug=is_debug)
+
 
 if __name__ == "__main__":
     main()

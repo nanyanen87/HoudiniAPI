@@ -4,7 +4,7 @@ import hapi
 import psutil
 from config import HARS_PORT
 
-def start_hars(is_internal=False):
+def get(is_internal=False):
 
     # hars_process_idがある場合は、すでに起動しているのでエラーを返す
     if 'hars_process_id' in globals():

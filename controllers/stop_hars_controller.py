@@ -1,8 +1,11 @@
 import os
 import signal
 import psutil
-from flask import jsonify, request
+from flask import jsonify, request, Blueprint
 
+bp = Blueprint('bp', __name__, url_prefix='/api')
+
+@bp.route('/stop_hars', methods=['GET'])
 def check_process(process_id: int):
     try:
         os.kill(process_id, 0)

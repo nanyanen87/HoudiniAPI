@@ -1,9 +1,8 @@
 import datetime
-from flask import jsonify,request
+from flask import jsonify, request, Blueprint
 import sys
 import hapi
 
-from testScript.create_node import cook_options
 from utils.hapi_utils import convert_asset_name_to_operator_name, get_param_name, set_multi_param
 
 # hda_path = r"C:\\Users\\hanaoka nan\\AppDevelop\\houdiniScript\\hdaFiles\\top_hanaoka_nan.apirequest.1.0.hdanc"
@@ -13,8 +12,9 @@ from utils.hapi_utils import get_library_name, get_asset_names, get_node_name, g
     close_session, convert_asset_name_to_operator_name
 
 
+
 # 接続確立用と作業用のsessionを分ける?
-def execute_hda():
+def get():
     session = init_hars_session()
     try:
         print("session created successfully!")
@@ -37,7 +37,7 @@ def execute_hda():
                 break
 
         #　目的のnodeを置く parent_nodeを作成
-        parent_node_id = hapi.createNode(session, -1, "Object/geo")
+        # parent_node_id = hapi.createNode(session, -1, "Object/geo")
         # parent_node_id = hapi.createNode(session, -1, "Top/topnet")
 
         # node作成
@@ -45,20 +45,28 @@ def execute_hda():
         my_asset_name = get_asset_names(session, lib_id)[0]
         # asset_nameをoperator_nameに変換　Natsumaru::chair::1.0
         operator_name = convert_asset_name_to_operator_name(my_asset_name)
-        print(f"Operator name: {operator_name}")
+        print(f"Operator name: {my_asset_name}")
         node_id = hapi.createNode(session, -1, "tsuno::Object/sample_pig_image::1.0")
         node_name = get_node_name(session, node_id)
         print(f"Created node: {node_name}")
         cook_options = hapi.CookOptions()
         hapi.cookNode(session, node_id, cook_options)
 
+        #child node idを取得
+        child_count = hapi.composeChildNodeList(session, node_id,0,0,False)
+        child_node_ids = hapi.getComposedChildNodeList(session, node_id, child_count)
+        for child_node_id in child_node_ids:
+            node_name = get_node_name(session, child_node_id)
+            print(f"Child node: {node_name}")
+
+
         # paramを取得
-        node_info = hapi.getNodeInfo(session, node_id)
-        node_info_param_count = node_info.parmCount
-        param_info_list = hapi.getParameters(session, node_id, 0, node_info_param_count)
-        for i in range(node_info_param_count):
-            param_name = get_param_name(session, node_id, param_info_list[i].id)
-            print(param_name)
+        # node_info = hapi.getNodeInfo(session, node_id)
+        # node_info_param_count = node_info.parmCount
+        # param_info_list = hapi.getParameters(session, node_id, 0, node_info_param_count)
+        # for i in range(node_info_param_count):
+        #     param_name = get_param_name(session, node_id, param_info_list[i].id)
+        #     print(param_name)
 
         # paramを一気に設定
 

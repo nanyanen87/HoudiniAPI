@@ -1,11 +1,11 @@
 import datetime
-from flask import jsonify
+from flask import jsonify, Blueprint
 import hapi
 from config import HARS_PORT, HARS_HOST
 from utils.hapi_utils import get_library_name, get_asset_names, get_node_name, get_library_ids, init_hars_session, close_session
 
 
-def execute():
+def get():
     session = init_hars_session()
 
     try:
