@@ -151,3 +151,8 @@ def convert_asset_name_to_operator_name(asset_name):
     version = array[2]
 
     return f"{author}::{base_name}::{version}"
+
+def get_child_node_ids(session, node_id):
+    child_count = hapi.composeChildNodeList(session, node_id,hapi.nodeType.Any,hapi.nodeFlags.Any,False)
+    child_node_ids = hapi.getComposedChildNodeList(session, node_id, child_count)
+    return child_node_ids

@@ -1,19 +1,39 @@
 import datetime
-from flask import jsonify, request, Blueprint
+from flask import jsonify
 import sys
 import hapi
 
-from utils.hapi_utils import convert_asset_name_to_operator_name, get_param_name, set_multi_param
 
 # hda_path = r"C:\\Users\\hanaoka nan\\AppDevelop\\houdiniScript\\hdaFiles\\top_hanaoka_nan.apirequest.1.0.hdanc"
 # hda_path = r"C:\\Users\\hanaoka nan\\AppDevelop\\houdiniScript\\hdaFiles\\sop_Natsumaru.chair.1.0.hdalc"
-hda_path = r"C:\Users\hanaoka nan\AppDevelop\houdiniScript\hdaFiles\object_tsuno.sample_pig_image.1.0.hdalc"
+hda_path = r"/input_files/object_tsuno.sample_pig_image_copy.1.0.hdanc"
 from utils.hapi_utils import get_library_name, get_asset_names, get_node_name, get_library_ids, init_hars_session, \
-    close_session, convert_asset_name_to_operator_name
+    close_session, get_child_node_ids
+
+#todo hdaからcreateしたnodeにはlockがかかっているので、解除する必要がある
+def __generate_image_from_top_node(session, top_node_id):
+    # top nodeをcookPDG
+    node_name = get_node_name(session, top_node_id)
+    # res = hapi.cookPDG(session, top_node_id, 0, 1)
+
+    #　cookPDGAllOutputs,ropfetchのnode_idだと「 cook_node_id should be a TOP Network」エラーが出る
+    res = hapi.cookPDGAllOutputs(session, top_node_id, 1, 1)
+    print(f"Top node cooked: {node_name} {res}")
+    context_id = hapi.getPDGGraphContextId(session, top_node_id)
+
+    # graph_context_count = hapi.getPDGGraphContextsCount(session)
+    # context_names_and_ids = hapi.getPDGGraphContexts(session, 0, graph_context_count)
+    # for graph_context_sh in context_names_and_ids[0]:
+    #     len = hapi.getStringBufLength(session, graph_context_sh)
+    #     graph_context = hapi.getString(session, graph_context_sh, len)
+    #     print(f"Graph context: {graph_context}")
 
 
+    state_int = hapi.getPDGState(session, context_id)
+    length = hapi.getStringBufLength(session,state_int)
+    state = hapi.getString(session, state_int, length)
+    print(f"Top node cooked: {node_name} {res} {state}")
 
-# 接続確立用と作業用のsessionを分ける?
 def get():
     session = init_hars_session()
     try:
@@ -44,22 +64,47 @@ def get():
         # natsumaru node作成　Natsumaru::Sop/chair::1.0
         my_asset_name = get_asset_names(session, lib_id)[0]
         # asset_nameをoperator_nameに変換　Natsumaru::chair::1.0
-        operator_name = convert_asset_name_to_operator_name(my_asset_name)
         print(f"Operator name: {my_asset_name}")
-        node_id = hapi.createNode(session, -1, "tsuno::Object/sample_pig_image::1.0")
+        node_id = hapi.createNode(session, -1, my_asset_name)
         node_name = get_node_name(session, node_id)
         print(f"Created node: {node_name}")
-        cook_options = hapi.CookOptions()
-        hapi.cookNode(session, node_id, cook_options)
+
+
+
+        # object nodeを取得(childの下位互換っぽい)
+        # obj_count = hapi.composeObjectList(session, node_id, None)
+        # print(f"Object count: {obj_count}")
+        # obj_info_list = hapi.getComposedObjectList(session, node_id, 0, obj_count)
+        # for obj_info in obj_info_list:
+        #     obj_node_id = obj_info.nodeId
+        #     obj_name = get_node_name(session, obj_node_id)
+        #     print(f"Object node: {obj_name}")
+
 
         #child node idを取得
-        child_count = hapi.composeChildNodeList(session, node_id,0,0,False)
+        child_count = hapi.composeChildNodeList(session, node_id,hapi.nodeType.Any,hapi.nodeFlags.Any,False)
+        print(f"Child count: {child_count}")
         child_node_ids = hapi.getComposedChildNodeList(session, node_id, child_count)
+        print(f"Child node ids: {child_node_ids}")
+        cook_options = hapi.CookOptions()
         for child_node_id in child_node_ids:
             node_name = get_node_name(session, child_node_id)
-            print(f"Child node: {node_name}")
+            print(f"Child node cooked: {node_name}")
+
+        # __generate_image_from_top_node(session, 4)
+
+        # grand_child_ids = get_child_node_ids(session, 4)
+        # print(f"Grand child ids: {grand_child_ids}")
+        # for grand_child_id in grand_child_ids:
+        #     node_name = get_node_name(session, grand_child_id)
+        #     print(f"Grand child node: {node_name}")
+        #     # res = hapi.cookNode(session, grand_child_id, cook_options)
+        #     if grand_child_id == 6:
+        #         __generate_image_from_top_node(session, grand_child_id)
 
 
+
+        # 保存
         # paramを取得
         # node_info = hapi.getNodeInfo(session, node_id)
         # node_info_param_count = node_info.parmCount
@@ -74,11 +119,11 @@ def get():
 
 
         # 保存
-        now = datetime.datetime.now()
-        output_path = "output"
-        # file名を日付+ノード名にする
-        file_name = f"{now.strftime('%Y%m%d-%H%M%S')}_{node_name}.hip"
-        hapi.saveHIPFile(session, f"{output_path}/{file_name}", True)
+        # now = datetime.datetime.now()
+        # output_path = "output"
+        # # file名を日付+ノード名にする
+        # file_name = f"{now.strftime('%Y%m%d-%H%M%S')}_{node_name}.hip"
+        # hapi.saveHIPFile(session, f"{output_path}/{file_name}", True)
 
 
     except hapi.FailureError as e:
@@ -86,9 +131,8 @@ def get():
     except Exception as e:
         print(f"An error occurred: {e}")
 
-    hapi.cleanup(session)
+    close_session(session)
     print("Session cleaned up.")
-    # hapi.shutdown(session)
-    hapi.closeSession(session)
+
     return jsonify({"message": "Node created successfully"}), 200
 
