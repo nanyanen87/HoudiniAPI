@@ -12,14 +12,15 @@ load_dotenv()
 host = os.getenv("HOST")
 port = int(os.getenv("PORT"))
 client_id = str(uuid.uuid4())
-server_address = os.getenv("CONFY_UI_SERVER_ADDRESS")
+server_address_ws = os.getenv("CONFY_UI_SERVER_ADDRESS_WS")
+server_address_http = os.getenv("CONFY_UI_SERVER_ADDRESS_HTTP")
+
 
 class CustomHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         # アクセスがあったことをコンソールに表示
         print(f"GET request received from {self.client_address[0]}:{self.client_address[1]}, Path: {self.path}")
-
         # 200 OKのレスポンスを返す
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
@@ -39,19 +40,31 @@ class CustomHandler(BaseHTTPRequestHandler):
 
             # todo hdaがないのでとりあえずもらったpromptで実行
             json_data = json.loads(post_data)
+            # json_data = json.loads(prompt_text)
             print("Received JSON data:", json_data)  # コンソールに表示
 
 
             # websocketでserver_addressに接続し、imagesを返す
             ws = websocket.WebSocket()
-            ws.connect("ws://{}/ws?clientId={}".format(server_address, client_id))
-            images = self.get_images(ws, json_data)
-            ws.close()
-            # imageをoutputImagesディレクトリに保存
-            for node, images in images.items():
-                for i, image in enumerate(images):
-                    with open(f"output/{node}_{i}.png", "wb") as f:
-                        f.write(image)
+            ws_url = "ws://{}/ws?clientId={}".format(server_address_ws, client_id)
+            print(f"Connecting to {ws_url}")
+            try:
+                ws = websocket.create_connection(ws_url)
+                print("WebSocket connection established successfully.")
+            except websocket.WebSocketException as e:
+                print(f"WebSocket connection failed: {e}")
+            except Exception as e:
+                print(f"An error occurred: {e}")
+            finally:
+                if 'ws' in locals() and ws.connected:
+                    images = self.get_images(ws, json_data)
+                    ws.close()
+
+                    # imageをoutputImagesディレクトリに保存
+                    for node, images in images.items():
+                        for i, image in enumerate(images):
+                            with open(f"output/{node}_{client_id}.png", "wb") as f:
+                                f.write(image)
 
 
         except json.JSONDecodeError:
@@ -67,13 +80,13 @@ class CustomHandler(BaseHTTPRequestHandler):
     def _queue_prompt(self, prompt):
         p = {"prompt": prompt, "client_id": client_id}
         data = json.dumps(p).encode('utf-8')
-        req =  request.Request("http://{}/prompt".format(server_address), data=data)
+        req =  request.Request("http://{}/prompt".format(server_address_http), data=data)
         return json.loads(request.urlopen(req).read())
 
     def get_image(filename, subfolder, folder_type):
         data = {"filename": filename, "subfolder": subfolder, "type": folder_type}
         url_values = parse.urlencode(data)
-        with request.urlopen("http://{}/view?{}".format(server_address, url_values)) as response:
+        with request.urlopen("http://{}/view?{}".format(server_address_http, url_values)) as response:
             return response.read()
 
     def get_images(self, ws, prompt):
