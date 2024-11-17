@@ -1,7 +1,16 @@
 from flask import request, jsonify
 import json
 import websocket
+import dotenv
+import os
+import sys
+import uuid
 
+dotenv.load_dotenv()
+server_address_ws = os.getenv("CONFY_UI_SERVER_ADDRESS_WS")
+client_id = str(uuid.uuid4())
+
+host = os.getenv("HOST")
 # confyUIserverにpromptを送信し、imageを取得するcontroller
 def get():
     # リクエストヘッダのContent-Lengthを取得

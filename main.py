@@ -12,10 +12,15 @@ load_dotenv()
 host = os.getenv("HOST")
 port = int(os.getenv("PORT"))
 client_id = str(uuid.uuid4())
-server_address_ws = os.getenv("CONFY_UI_SERVER_ADDRESS_WS")
-server_address_http = os.getenv("CONFY_UI_SERVER_ADDRESS_HTTP")
-
-
+# server_address_ws = os.getenv("CONFY_UI_SERVER_ADDRESS_WS")
+# server_address_http = os.getenv("CONFY_UI_SERVER_ADDRESS_HTTP")
+comfy_ui_domain = os.getenv("COMFY_UI_DOMAIN")
+server_address_ws = f"{comfy_ui_domain}"
+server_address_http = f"{comfy_ui_domain}"
+headers = {
+    'User-Agent': 'Mozilla/5.0',
+    'Content-Type': 'application/json'
+}
 class CustomHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
@@ -46,7 +51,7 @@ class CustomHandler(BaseHTTPRequestHandler):
 
             # websocketでserver_addressに接続し、imagesを返す
             ws = websocket.WebSocket()
-            ws_url = "ws://{}/ws?clientId={}".format(server_address_ws, client_id)
+            ws_url = "wss://{}/ws?clientId={}".format(server_address_ws, client_id)
             print(f"Connecting to {ws_url}")
             try:
                 ws = websocket.create_connection(ws_url)
@@ -80,13 +85,18 @@ class CustomHandler(BaseHTTPRequestHandler):
     def _queue_prompt(self, prompt):
         p = {"prompt": prompt, "client_id": client_id}
         data = json.dumps(p).encode('utf-8')
-        req =  request.Request("http://{}/prompt".format(server_address_http), data=data)
+        headers = {
+            'User-Agent': 'Mozilla/5.0',
+            'Content-Type': 'application/json'
+        }
+
+        req =  request.Request("https://{}/prompt".format(server_address_http), data=data, headers=headers)
         return json.loads(request.urlopen(req).read())
 
     def get_image(filename, subfolder, folder_type):
         data = {"filename": filename, "subfolder": subfolder, "type": folder_type}
         url_values = parse.urlencode(data)
-        with request.urlopen("http://{}/view?{}".format(server_address_http, url_values)) as response:
+        with request.urlopen("https://{}/view?{}".format(server_address_http, url_values)) as response:
             return response.read()
 
     def get_images(self, ws, prompt):
