@@ -1,4 +1,5 @@
 import json
+import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib import request, parse
 from dotenv import load_dotenv
@@ -12,11 +13,8 @@ load_dotenv()
 host = os.getenv("HOST")
 port = int(os.getenv("PORT"))
 client_id = str(uuid.uuid4())
-# server_address_ws = os.getenv("CONFY_UI_SERVER_ADDRESS_WS")
-# server_address_http = os.getenv("CONFY_UI_SERVER_ADDRESS_HTTP")
 comfy_ui_domain = os.getenv("COMFY_UI_DOMAIN")
-server_address_ws = f"{comfy_ui_domain}"
-server_address_http = f"{comfy_ui_domain}"
+
 headers = {
     'User-Agent': 'Mozilla/5.0',
     'Content-Type': 'application/json'
@@ -38,12 +36,9 @@ class CustomHandler(BaseHTTPRequestHandler):
 
         # リクエストボディからデータを取得
         post_data = self.rfile.read(content_length)
-        # todo 本来はこのjsonデータを使ってhdaを書き換える。
-
-        # hapiでhdaを実行する
         try:
 
-            # todo hdaがないのでとりあえずもらったpromptで実行
+            # リクエストボディからデータを取得
             json_data = json.loads(post_data)
             # json_data = json.loads(prompt_text)
             print("Received JSON data:", json_data)  # コンソールに表示
@@ -51,7 +46,7 @@ class CustomHandler(BaseHTTPRequestHandler):
 
             # websocketでserver_addressに接続し、imagesを返す
             ws = websocket.WebSocket()
-            ws_url = "wss://{}/ws?clientId={}".format(server_address_ws, client_id)
+            ws_url = "wss://{}/ws?clientId={}".format(comfy_ui_domain, client_id)
             print(f"Connecting to {ws_url}")
             try:
                 ws = websocket.create_connection(ws_url)
@@ -65,10 +60,13 @@ class CustomHandler(BaseHTTPRequestHandler):
                     images = self.get_images(ws, json_data)
                     ws.close()
 
+                    now = datetime.date.today()
+
+
                     # imageをoutputImagesディレクトリに保存
                     for node, images in images.items():
                         for i, image in enumerate(images):
-                            with open(f"output/{node}_{client_id}.png", "wb") as f:
+                            with open(f"output/{node}_{now}.png", "wb") as f:
                                 f.write(image)
 
 
@@ -90,13 +88,13 @@ class CustomHandler(BaseHTTPRequestHandler):
             'Content-Type': 'application/json'
         }
 
-        req =  request.Request("https://{}/prompt".format(server_address_http), data=data, headers=headers)
+        req =  request.Request("https://{}/prompt".format(comfy_ui_domain), data=data, headers=headers)
         return json.loads(request.urlopen(req).read())
 
     def get_image(filename, subfolder, folder_type):
         data = {"filename": filename, "subfolder": subfolder, "type": folder_type}
         url_values = parse.urlencode(data)
-        with request.urlopen("https://{}/view?{}".format(server_address_http, url_values)) as response:
+        with request.urlopen("https://{}/view?{}".format(comfy_ui_domain, url_values)) as response:
             return response.read()
 
     def get_images(self, ws, prompt):
